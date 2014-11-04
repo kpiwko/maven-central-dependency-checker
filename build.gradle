@@ -1,0 +1,91 @@
+import org.jboss.shrinkwrap.resolver.api.maven.Maven
+import java.io.File
+
+defaultTasks 'test'
+apply plugin: 'spacelift'
+
+// properties used globally per project
+ext {
+    artifactsFile = 'artifacts'
+}
+
+spacelift {
+    workspace = new File(project.rootDir, 'ws')
+    // localRepository = path
+    // killServers = true|false
+    enableStaging = false
+    enableSnapshots = false
+
+    ///////////////////////////////////////////////////////////////////////////
+    // TOOLS
+    // tools available on current machine
+    tools {
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // EXECUTION PROFILES
+    // you can enable profile by -Pprofile=profileName
+    profiles {
+        'default' {
+            enabledInstallations = ['*']
+            tests = ['*']
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // INSTALLATIONS
+    installations {
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // TESTS ASSOCIATED WITH PROFILES
+    tests {
+        dependenciesInCentral {
+            execute {
+
+
+                new File(project.rootDir, project.artifactsFile).eachLine { artifact ->
+                    try {
+                        // clean instance of resolver every time to avoid injection of other Maven repositories from resolved pom.xml files
+                        def resolver = Maven.configureResolver().fromFile("${project.spacelift.workspace}/settings.xml")
+                        resolver.resolve(artifact).withoutTransitivity().asFile()
+                        println "Resolved ${artifact}"
+                    }
+                    catch(Exception e) {
+                        println "Not in Maven Central: ${artifact}"
+                    }
+                }
+            }
+        }
+    }
+}
+
+// build dependencies
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            name 'jboss-staging-repository-group'
+            url 'https://repository.jboss.org/nexus/content/groups/staging'
+        }
+    }
+    dependencies {
+        classpath 'org.arquillian.spacelift.gradle:arquillian-spacelift-gradle:1.0.0-alpha-2'
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    junitreport
+}
+
+dependencies {
+    junitreport 'org.apache.ant:ant-junit:1.9.4'
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.8'
+}

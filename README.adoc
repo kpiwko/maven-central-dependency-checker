@@ -1,0 +1,11 @@
+= Validator for dependencies in Maven Central
+
+A simple tool that is using ShrinkWrap Resolver to resolve artifacts from Maven Central.
+This way, you can identify artifacts not present there.
+
+== Usage
+
+1. Create _artifacts_ file with format G:A:P:V
+    You can use +mvn dependency:tree -DoutputFile=fileName+ and then find/sed/awk magic 
+2. Run +./gradlew test+
+3. Analyze reports for missing artifacts
