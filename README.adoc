@@ -5,7 +5,14 @@ This way, you can identify artifacts not present there.
 
 == Usage
 
-1. Create _artifacts_ file with format G:A:P:V
-    You can use +mvn dependency:tree -DoutputFile=fileName+ and then find/sed/awk magic 
-2. Run +./gradlew test+
-3. Analyze reports for missing artifacts
+1. Create _artifacts_ file with format G:A:P:V. You can use +mvn dependency:tree -DoutputFile=fileName+ and then find/sed/awk magic, such as:
++
+[source,bash]
+----
+mvn install dependency:tree -DskipTests -DoutputFile=output
+find . -name output -type f -exec cat {} \; > fullDepTree
+cat fullDepTree | sed 's/[^a-zA-Z0-9_.:-]//g' | sed 's/versionmanagedfrom.*//g' | sed 's/^-\?\(.*\)/\1/g' | cut -d: -f1-4 | sort -u > artifacts
+----
+
+2. Run +./gradlew test | tee output+ with artifacts file in this directory
+3. Analyze report for missing artifacts
